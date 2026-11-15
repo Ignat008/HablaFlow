@@ -1,4 +1,5 @@
 import { Volume2 } from 'lucide-react';
+import { useLanguage } from '@/languageContext';
 
 interface SpeakButtonProps {
   text: string;
@@ -8,6 +9,7 @@ interface SpeakButtonProps {
 }
 
 export function SpeakButton({ text, lang = 'es-ES', className = '', size = 'md' }: SpeakButtonProps) {
+  const { t } = useLanguage();
   const sizeClasses = {
     sm: 'w-8 h-8',
     md: 'w-10 h-10',
@@ -30,8 +32,9 @@ export function SpeakButton({ text, lang = 'es-ES', className = '', size = 'md' 
     utterance.rate = 0.85;
 
     const voices = window.speechSynthesis.getVoices();
-    const spanishVoice = voices.find((v) => v.lang.startsWith('es'));
-    if (spanishVoice) utterance.voice = spanishVoice;
+    const languageCode = lang.split('-')[0].toLowerCase();
+    const matchingVoice = voices.find((voice) => voice.lang.toLowerCase().startsWith(languageCode));
+    if (matchingVoice) utterance.voice = matchingVoice;
 
     window.speechSynthesis.speak(utterance);
   };
@@ -40,8 +43,8 @@ export function SpeakButton({ text, lang = 'es-ES', className = '', size = 'md' 
     <button
       onClick={speak}
       className={`${sizeClasses[size]} rounded-full bg-primary-500/10 hover:bg-primary-500/20 text-primary-500 flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95 ${className}`}
-      aria-label="Pronounce"
-      title="Listen to pronunciation"
+      aria-label={t('Pronounce')}
+      title={t('Listen to pronunciation')}
     >
       <Volume2 className={iconSizes[size]} />
     </button>

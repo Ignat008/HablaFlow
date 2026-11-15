@@ -16,6 +16,9 @@ import { quizQuestions, getQuizByCategory } from '@/data/quizData';
 import { Confetti } from '@/components/Confetti';
 import { ProgressBar } from '@/components/ProgressBar';
 import { SpeakButton } from '@/components/SpeakButton';
+import { quizUk } from '@/data/vocabularyUk';
+import { formatQuestionCount } from '@/language';
+import { useLanguage } from '@/languageContext';
 
 interface QuizViewProps {
   progress: UserProgress;
@@ -26,6 +29,7 @@ interface QuizViewProps {
 type QuizState = 'setup' | 'playing' | 'finished';
 
 export function QuizView({ progress, recordQuizAnswer, markQuizCompleted }: QuizViewProps) {
+  const { language, t } = useLanguage();
   const [selectedCategory, setSelectedCategory] = useState<Category | 'all'>('all');
   const [state, setState] = useState<QuizState>('setup');
   const [questions, setQuestions] = useState(quizQuestions);
@@ -87,6 +91,10 @@ export function QuizView({ progress, recordQuizAnswer, markQuizCompleted }: Quiz
   }, []);
 
   const currentQuestion = questions[currentIndex];
+  const localizedQuestion = language === 'uk' ? quizUk[currentQuestion.id] : undefined;
+  const questionText = localizedQuestion?.question ?? currentQuestion.question;
+  const questionOptions = localizedQuestion?.options ?? currentQuestion.options;
+  const questionExplanation = localizedQuestion?.explanation ?? currentQuestion.explanation;
   const percent = questions.length > 0 ? (score / questions.length) * 100 : 0;
 
   // SETUP SCREEN
@@ -98,8 +106,8 @@ export function QuizView({ progress, recordQuizAnswer, markQuizCompleted }: Quiz
             <Brain className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h2 className="font-display font-bold text-xl text-gray-900 dark:text-white">Quiz Challenge</h2>
-            <p className="text-sm text-gray-400">Test your Spanish knowledge</p>
+            <h2 className="font-display font-bold text-xl text-gray-900 dark:text-white">{t('Quiz Challenge')}</h2>
+            <p className="text-sm text-gray-400">{t('Test your Spanish knowledge')}</p>
           </div>
         </div>
 
@@ -108,7 +116,7 @@ export function QuizView({ progress, recordQuizAnswer, markQuizCompleted }: Quiz
           <div className="grid grid-cols-3 gap-4">
             <div className="bg-white dark:bg-dark-900 rounded-2xl p-4 border border-gray-200 dark:border-dark-700 text-center">
               <p className="text-2xl font-display font-bold text-gray-900 dark:text-white">{progress.quizzesCompleted}</p>
-              <p className="text-xs text-gray-400 mt-1">Quizzes Done</p>
+              <p className="text-xs text-gray-400 mt-1">{t('Quizzes Done')}</p>
             </div>
             <div className="bg-white dark:bg-dark-900 rounded-2xl p-4 border border-gray-200 dark:border-dark-700 text-center">
               <p className="text-2xl font-display font-bold text-gray-900 dark:text-white">
@@ -116,18 +124,18 @@ export function QuizView({ progress, recordQuizAnswer, markQuizCompleted }: Quiz
                   ? Math.round((progress.correctAnswers / progress.totalAnswers) * 100)
                   : 0}%
               </p>
-              <p className="text-xs text-gray-400 mt-1">Accuracy</p>
+              <p className="text-xs text-gray-400 mt-1">{t('Accuracy')}</p>
             </div>
             <div className="bg-white dark:bg-dark-900 rounded-2xl p-4 border border-gray-200 dark:border-dark-700 text-center">
               <p className="text-2xl font-display font-bold text-gray-900 dark:text-white">{progress.correctAnswers}</p>
-              <p className="text-xs text-gray-400 mt-1">Correct Total</p>
+              <p className="text-xs text-gray-400 mt-1">{t('Correct Total')}</p>
             </div>
           </div>
         )}
 
         {/* Category selection */}
         <div className="bg-white dark:bg-dark-900 rounded-2xl p-6 border border-gray-200 dark:border-dark-700">
-          <h3 className="font-display font-semibold text-gray-900 dark:text-white mb-4">Choose a category</h3>
+          <h3 className="font-display font-semibold text-gray-900 dark:text-white mb-4">{t('Choose a category')}</h3>
           <div className="grid grid-cols-2 gap-3">
             <button
               onClick={() => setSelectedCategory('all')}
@@ -137,8 +145,8 @@ export function QuizView({ progress, recordQuizAnswer, markQuizCompleted }: Quiz
                   : 'border-gray-200 dark:border-dark-700 hover:border-coral-300'
               }`}
             >
-              <p className="font-semibold text-gray-900 dark:text-white text-sm">All Categories</p>
-              <p className="text-xs text-gray-400 mt-1">{quizQuestions.length} questions</p>
+              <p className="font-semibold text-gray-900 dark:text-white text-sm">{t('All Categories')}</p>
+              <p className="text-xs text-gray-400 mt-1">{formatQuestionCount(quizQuestions.length, language)}</p>
             </button>
             {categories.map((cat) => {
               const count = quizQuestions.filter((q) => q.category === cat.id).length;
@@ -153,8 +161,10 @@ export function QuizView({ progress, recordQuizAnswer, markQuizCompleted }: Quiz
                       : 'border-gray-200 dark:border-dark-700 hover:border-coral-300'
                   }`}
                 >
-                  <p className="font-semibold text-gray-900 dark:text-white text-sm">{cat.label}</p>
-                  <p className="text-xs text-gray-400 mt-1">{count} questions</p>
+                  <p className="font-semibold text-gray-900 dark:text-white text-sm">
+                    {language === 'uk' ? cat.labelUa : cat.label}
+                  </p>
+                  <p className="text-xs text-gray-400 mt-1">{formatQuestionCount(count, language)}</p>
                 </button>
               );
             })}
@@ -164,7 +174,7 @@ export function QuizView({ progress, recordQuizAnswer, markQuizCompleted }: Quiz
             onClick={startQuiz}
             className="w-full mt-5 py-3.5 gradient-bg text-white rounded-xl font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
           >
-            <Sparkles className="w-5 h-5" /> Start Quiz
+            <Sparkles className="w-5 h-5" /> {t('Start Quiz')}
           </button>
         </div>
       </div>
@@ -189,26 +199,26 @@ export function QuizView({ progress, recordQuizAnswer, markQuizCompleted }: Quiz
           </div>
 
           <h2 className="font-display text-2xl font-bold text-gray-900 dark:text-white mb-2">
-            {passed ? '¡Excelente! Quiz Complete!' : 'Quiz Complete!'}
+            {t(passed ? '¡Excelente! Quiz Complete!' : 'Quiz Complete!')}
           </h2>
           <p className="text-gray-500 dark:text-gray-400 mb-6">
             {passed
-              ? 'Great job — you\'re mastering Spanish!'
-              : 'Keep practicing — you\'ll get there!'}
+              ? t('Great job — you\'re mastering Spanish!')
+              : t('Keep practicing — you\'ll get there!')}
           </p>
 
           <div className="grid grid-cols-3 gap-4 mb-6">
             <div className="bg-gray-50 dark:bg-dark-800 rounded-2xl p-4">
               <p className="text-3xl font-display font-bold text-gray-900 dark:text-white">{score}</p>
-              <p className="text-xs text-gray-400 mt-1">Correct</p>
+              <p className="text-xs text-gray-400 mt-1">{t('Correct')}</p>
             </div>
             <div className="bg-gray-50 dark:bg-dark-800 rounded-2xl p-4">
               <p className="text-3xl font-display font-bold text-coral-500">{questions.length - score}</p>
-              <p className="text-xs text-gray-400 mt-1">Wrong</p>
+              <p className="text-xs text-gray-400 mt-1">{t('Wrong')}</p>
             </div>
             <div className="bg-gray-50 dark:bg-dark-800 rounded-2xl p-4">
               <p className="text-3xl font-display font-bold text-primary-500">{Math.round(percent)}%</p>
-              <p className="text-xs text-gray-400 mt-1">Score</p>
+              <p className="text-xs text-gray-400 mt-1">{t('Score')}</p>
             </div>
           </div>
 
@@ -216,7 +226,7 @@ export function QuizView({ progress, recordQuizAnswer, markQuizCompleted }: Quiz
           <div className="flex items-center justify-center gap-2 mb-6">
             <Award className="w-5 h-5 text-warmyellow-500" />
             <span className="text-sm font-semibold text-gray-900 dark:text-white">
-              +{score * 10 + (answeredIds.length >= questions.length ? 20 : 0)} XP earned
+              +{score * 10 + (answeredIds.length >= questions.length ? 20 : 0)} {t('XP earned')}
             </span>
           </div>
 
@@ -225,13 +235,13 @@ export function QuizView({ progress, recordQuizAnswer, markQuizCompleted }: Quiz
               onClick={startQuiz}
               className="flex-1 py-3 gradient-bg text-white rounded-xl font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
             >
-              <RotateCw className="w-4 h-4" /> Try Again
+              <RotateCw className="w-4 h-4" /> {t('Try Again')}
             </button>
             <button
               onClick={handleRestart}
               className="flex-1 py-3 bg-gray-100 dark:bg-dark-800 text-gray-700 dark:text-gray-300 rounded-xl font-semibold hover:bg-gray-200 dark:hover:bg-dark-700 transition-colors"
             >
-              Back to Setup
+              {t('Back to Setup')}
             </button>
           </div>
         </div>
@@ -251,8 +261,12 @@ export function QuizView({ progress, recordQuizAnswer, markQuizCompleted }: Quiz
             <Brain className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h2 className="font-display font-bold text-xl text-gray-900 dark:text-white">Quiz</h2>
-            <p className="text-sm text-gray-400">Question {currentIndex + 1} of {questions.length}</p>
+            <h2 className="font-display font-bold text-xl text-gray-900 dark:text-white">{t('Quiz')}</h2>
+            <p className="text-sm text-gray-400">
+              {t('Question {current} of {total}')
+                .replace('{current}', String(currentIndex + 1))
+                .replace('{total}', String(questions.length))}
+            </p>
           </div>
         </div>
         <div className="flex items-center gap-2 px-3 py-2 bg-warmyellow-50 dark:bg-dark-800 rounded-xl">
@@ -274,21 +288,23 @@ export function QuizView({ progress, recordQuizAnswer, markQuizCompleted }: Quiz
       {/* Question card */}
       <div className="bg-white dark:bg-dark-900 rounded-2xl p-6 border border-gray-200 dark:border-dark-700">
         <span className="text-xs font-medium bg-coral-100 dark:bg-dark-800 text-coral-600 dark:text-coral-400 px-3 py-1 rounded-full">
-          {categories.find((c) => c.id === currentQuestion.category)?.label}
+          {language === 'uk'
+            ? categories.find((c) => c.id === currentQuestion.category)?.labelUa
+            : categories.find((c) => c.id === currentQuestion.category)?.label}
         </span>
         <h3 className="font-display text-lg sm:text-xl font-bold text-gray-900 dark:text-white mt-4 mb-2">
-          {currentQuestion.question}
+          {questionText}
         </h3>
-        {currentQuestion.question.match(/[a-zA-Záéíóúñ¿¡]/) && (
+        {questionText.match(/[a-zA-Záéíóúñ¿¡]/) && (
           <div className="mb-4">
-            <SpeakButton text={currentQuestion.question} size="sm" />
+            <SpeakButton text={questionText} lang={language === 'uk' ? 'uk-UA' : 'en-US'} size="sm" />
           </div>
         )}
       </div>
 
       {/* Options */}
       <div className="space-y-3">
-        {currentQuestion.options.map((option, index) => {
+        {questionOptions.map((option, index) => {
           const isSelected = selectedOption === index;
           const isCorrect = index === currentQuestion.correctIndex;
           const showCorrect = showFeedback && isCorrect;
@@ -347,10 +363,10 @@ export function QuizView({ progress, recordQuizAnswer, markQuizCompleted }: Quiz
                   ? 'text-green-600 dark:text-green-400'
                   : 'text-coral-600 dark:text-coral-400'
               }`}>
-                {selectedOption === currentQuestion.correctIndex ? '¡Correcto!' : 'Not quite right...'}
+                {t(selectedOption === currentQuestion.correctIndex ? '¡Correcto!' : 'Not quite right...')}
               </p>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                {currentQuestion.explanation}
+                {questionExplanation}
               </p>
             </div>
           </div>
@@ -358,7 +374,7 @@ export function QuizView({ progress, recordQuizAnswer, markQuizCompleted }: Quiz
             onClick={handleNext}
             className="w-full mt-4 py-3 gradient-bg text-white rounded-xl font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
           >
-            {currentIndex + 1 >= questions.length ? 'See Results' : 'Next Question'}
+            {t(currentIndex + 1 >= questions.length ? 'See Results' : 'Next Question')}
             <ArrowRight className="w-4 h-4" />
           </button>
         </div>

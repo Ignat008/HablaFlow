@@ -1,5 +1,6 @@
 import { Sun, Moon } from 'lucide-react';
 import type { Theme } from '@/hooks/useTheme';
+import { useLanguage } from '@/languageContext';
 
 interface ThemeToggleProps {
   theme: Theme;
@@ -7,11 +8,12 @@ interface ThemeToggleProps {
 }
 
 export function ThemeToggle({ theme, toggleTheme }: ThemeToggleProps) {
+  const { t } = useLanguage();
   return (
     <button
       onClick={toggleTheme}
       className="relative w-14 h-7 rounded-full bg-gray-200 dark:bg-dark-700 transition-colors duration-300 flex items-center px-0.5"
-      aria-label="Toggle theme"
+      aria-label={t('Toggle theme')}
     >
       <div
         className={`w-6 h-6 rounded-full transition-transform duration-300 flex items-center justify-center ${

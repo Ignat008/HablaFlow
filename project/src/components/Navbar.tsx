@@ -15,6 +15,8 @@ import { getLevelFromXp, getLevelProgress } from '@/data/levels';
 import { ThemeToggle } from './ThemeToggle';
 import { ProgressBar } from './ProgressBar';
 import type { Theme } from '@/hooks/useTheme';
+import { formatStreak } from '@/language';
+import { useLanguage } from '@/languageContext';
 
 interface NavbarProps {
   currentView: View;
@@ -41,6 +43,7 @@ const iconMap: Record<string, typeof LayoutDashboard> = {
 };
 
 export function Navbar({ currentView, setView, theme, toggleTheme, progress, onOpenChat }: NavbarProps) {
+  const { language, setLanguage, t } = useLanguage();
   const [mobileOpen, setMobileOpen] = useState(false);
   const level = getLevelFromXp(progress.xp);
   const levelProgress = getLevelProgress(progress.xp);
@@ -64,7 +67,7 @@ export function Navbar({ currentView, setView, theme, toggleTheme, progress, onO
               <h1 className="font-display font-bold text-lg text-gray-900 dark:text-white leading-none">
                 HablaFlow
               </h1>
-              <p className="text-xs text-gray-400 dark:text-gray-500">Learn Spanish</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500">{t('Learn Spanish')}</p>
             </div>
           </div>
 
@@ -75,8 +78,10 @@ export function Navbar({ currentView, setView, theme, toggleTheme, progress, onO
                 <LevelIcon className="w-4 h-4 text-white" />
               </div>
               <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Level {level.level}</p>
-                <p className="font-semibold text-sm text-gray-900 dark:text-white">{level.name}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">{t('Level')} {level.level}</p>
+                <p className="font-semibold text-sm text-gray-900 dark:text-white">
+                  {language === 'uk' ? level.nameUa : level.name}
+                </p>
               </div>
             </div>
             <ProgressBar value={levelProgress} color="gradient-bg" height="h-2" />
@@ -89,8 +94,9 @@ export function Navbar({ currentView, setView, theme, toggleTheme, progress, onO
           {/* Streak */}
           <div className="mb-6 flex items-center gap-2 px-4 py-3 rounded-xl bg-coral-50 dark:bg-dark-800 border border-coral-100 dark:border-dark-700">
             <Flame className="w-5 h-5 text-coral-500" />
-            <span className="font-semibold text-sm text-gray-900 dark:text-white">{progress.streak}</span>
-            <span className="text-xs text-gray-500 dark:text-gray-400">day streak</span>
+            <span className="font-semibold text-sm text-gray-900 dark:text-white">
+              {formatStreak(progress.streak, language)}
+            </span>
           </div>
 
           {/* Nav items */}
@@ -109,7 +115,7 @@ export function Navbar({ currentView, setView, theme, toggleTheme, progress, onO
                   }`}
                 >
                   <Icon className="w-5 h-5" />
-                  {item.label}
+                  {t(item.label)}
                 </button>
               );
             })}
@@ -121,12 +127,23 @@ export function Navbar({ currentView, setView, theme, toggleTheme, progress, onO
               className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm bg-dark-900 dark:bg-white text-white dark:text-dark-900 hover:opacity-90 transition-opacity"
             >
               <MessageCircle className="w-5 h-5" />
-              AI Tutor Chat
+              {t('AI Tutor Chat')}
             </button>
             <div className="mt-4 flex items-center justify-between px-2">
-              <span className="text-xs text-gray-400">Theme</span>
+              <span className="text-xs text-gray-400">{t('Theme')}</span>
               <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
             </div>
+            <label className="mt-3 flex items-center justify-between px-2 text-xs text-gray-400">
+              <span>{t('Language')}</span>
+              <select
+                value={language}
+                onChange={(event) => setLanguage(event.target.value === 'uk' ? 'uk' : 'en')}
+                className="rounded-lg border border-gray-200 dark:border-dark-700 bg-white dark:bg-dark-800 px-2 py-1 text-sm text-gray-700 dark:text-gray-200"
+              >
+                <option value="en">English</option>
+                <option value="uk">Українська</option>
+              </select>
+            </label>
           </div>
         </div>
       </aside>
@@ -150,7 +167,7 @@ export function Navbar({ currentView, setView, theme, toggleTheme, progress, onO
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
               className="w-9 h-9 rounded-lg bg-gray-100 dark:bg-dark-800 flex items-center justify-center text-gray-700 dark:text-gray-300"
-              aria-label="Menu"
+              aria-label={t('Menu')}
             >
               {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
@@ -176,7 +193,7 @@ export function Navbar({ currentView, setView, theme, toggleTheme, progress, onO
                   }`}
                 >
                   <Icon className="w-5 h-5" />
-                  {item.label}
+                  {t(item.label)}
                 </button>
               );
             })}
@@ -185,8 +202,19 @@ export function Navbar({ currentView, setView, theme, toggleTheme, progress, onO
               className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm bg-dark-900 text-white"
             >
               <MessageCircle className="w-5 h-5" />
-              AI Tutor Chat
+              {t('AI Tutor Chat')}
             </button>
+            <label className="mt-3 flex items-center justify-between px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
+              <span>{t('Language')}</span>
+              <select
+                value={language}
+                onChange={(event) => setLanguage(event.target.value === 'uk' ? 'uk' : 'en')}
+                className="rounded-lg border border-gray-200 dark:border-dark-700 bg-white dark:bg-dark-800 px-2 py-1 text-sm text-gray-700 dark:text-gray-200"
+              >
+                <option value="en">English</option>
+                <option value="uk">Українська</option>
+              </select>
+            </label>
           </nav>
         </div>
       )}

@@ -13,6 +13,7 @@ import type { ChatMessage } from '@/types';
 import { generateAIResponse } from '@/data/aiEngine';
 import { useChat } from '@/hooks/useChat';
 import { SpeakButton } from '@/components/SpeakButton';
+import { useLanguage } from '@/languageContext';
 
 interface ChatWidgetProps {
   isOpen: boolean;
@@ -34,6 +35,7 @@ function formatMessage(content: string): string[] {
 }
 
 export function ChatWidget({ isOpen, onClose, recordChatMessage }: ChatWidgetProps) {
+  const { language, t } = useLanguage();
   const { messages, addMessage, clearChat } = useChat();
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -66,7 +68,7 @@ export function ChatWidget({ isOpen, onClose, recordChatMessage }: ChatWidgetPro
     // Simulate AI thinking delay
     const delay = 600 + Math.random() * 800;
     setTimeout(() => {
-      const response = generateAIResponse(text, messages);
+      const response = generateAIResponse(text, messages, language);
       addMessage({
         role: 'assistant',
         content: response.content,
@@ -74,12 +76,12 @@ export function ChatWidget({ isOpen, onClose, recordChatMessage }: ChatWidgetPro
       });
       setIsTyping(false);
     }, delay);
-  }, [input, isTyping, addMessage, recordChatMessage, messages]);
+  }, [input, isTyping, addMessage, recordChatMessage, messages, language]);
 
   const handleQuickPrompt = useCallback((prompt: string) => {
-    setInput(prompt);
+    setInput(t(prompt));
     inputRef.current?.focus();
-  }, []);
+  }, [t]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -107,10 +109,10 @@ export function ChatWidget({ isOpen, onClose, recordChatMessage }: ChatWidgetPro
               <Bot className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-display font-bold text-sm">AI Spanish Tutor</h3>
+              <h3 className="font-display font-bold text-sm">{t('AI Spanish Tutor')}</h3>
               <p className="text-xs text-white/70 flex items-center gap-1">
                 <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                Online — Ready to help
+                {t('Online — Ready to help')}
               </p>
             </div>
           </div>
@@ -119,8 +121,8 @@ export function ChatWidget({ isOpen, onClose, recordChatMessage }: ChatWidgetPro
               <button
                 onClick={clearChat}
                 className="w-9 h-9 rounded-lg hover:bg-white/20 flex items-center justify-center transition-colors"
-                aria-label="Clear chat"
-                title="Clear chat"
+                aria-label={t('Clear chat')}
+                title={t('Clear chat')}
               >
                 <Trash2 className="w-4 h-4" />
               </button>
@@ -128,7 +130,7 @@ export function ChatWidget({ isOpen, onClose, recordChatMessage }: ChatWidgetPro
             <button
               onClick={onClose}
               className="w-9 h-9 rounded-lg hover:bg-white/20 flex items-center justify-center transition-colors"
-              aria-label="Close chat"
+              aria-label={t('Close chat')}
             >
               <X className="w-5 h-5" />
             </button>
@@ -143,10 +145,10 @@ export function ChatWidget({ isOpen, onClose, recordChatMessage }: ChatWidgetPro
                 <Sparkles className="w-8 h-8 text-white" />
               </div>
               <h4 className="font-display font-bold text-gray-900 dark:text-white mb-2">
-                ¡Hola! I'm your AI Spanish Tutor
+                {t('¡Hola! I\'m your AI Spanish Tutor')}
               </h4>
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 max-w-xs mx-auto">
-                I can explain grammar, correct your Spanish, practice role-plays, and help you learn. Try one of these:
+                {t('I can explain grammar, correct your Spanish, practice role-plays, and help you learn. Try one of these:')}
               </p>
               <div className="grid gap-2 max-w-xs mx-auto">
                 {quickPrompts.map((prompt) => (
@@ -155,7 +157,7 @@ export function ChatWidget({ isOpen, onClose, recordChatMessage }: ChatWidgetPro
                     onClick={() => handleQuickPrompt(prompt)}
                     className="px-3 py-2 text-xs font-medium bg-white dark:bg-dark-800 text-gray-700 dark:text-gray-300 rounded-xl border border-gray-200 dark:border-dark-700 hover:border-primary-300 transition-colors text-left"
                   >
-                    {prompt}
+                    {t(prompt)}
                   </button>
                 ))}
               </div>
@@ -194,20 +196,20 @@ export function ChatWidget({ isOpen, onClose, recordChatMessage }: ChatWidgetPro
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Type in Spanish or English..."
+              placeholder={t('Type in Spanish or English...')}
               className="flex-1 px-4 py-3 bg-gray-100 dark:bg-dark-800 text-gray-900 dark:text-white text-sm rounded-xl border-0 outline-none focus:ring-2 focus:ring-primary-400 placeholder-gray-400"
             />
             <button
               onClick={handleSend}
               disabled={!input.trim() || isTyping}
               className="w-11 h-11 gradient-bg text-white rounded-xl flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 transition-opacity flex-shrink-0"
-              aria-label="Send message"
+              aria-label={t('Send message')}
             >
               <Send className="w-5 h-5" />
             </button>
           </div>
           <p className="text-[10px] text-gray-400 mt-2 text-center">
-            AI tutor provides grammar help, corrections & role-play practice
+            {t('AI tutor provides grammar help, corrections & role-play practice')}
           </p>
         </div>
       </div>
@@ -216,6 +218,7 @@ export function ChatWidget({ isOpen, onClose, recordChatMessage }: ChatWidgetPro
 }
 
 function MessageBubble({ message }: { message: ChatMessage }) {
+  const { language, t } = useLanguage();
   const isUser = message.role === 'user';
 
   return (
@@ -242,13 +245,17 @@ function MessageBubble({ message }: { message: ChatMessage }) {
           ))}
           {message.correction && (
             <div className="mt-2 p-2 bg-green-100 dark:bg-green-900/30 rounded-lg text-xs text-green-700 dark:text-green-400">
-              Corrected: {message.correction}
+              {t('Corrected:')} {message.correction}
             </div>
           )}
         </div>
         {!isUser && message.content.match(/[a-zA-Záéíóúñ¿¡]/) && (
           <div className="mt-1 ml-1">
-            <SpeakButton text={message.content.replace(/[*#]/g, '')} size="sm" />
+            <SpeakButton
+              text={message.content.replace(/[*#]/g, '')}
+              lang={language === 'uk' ? 'uk-UA' : 'en-US'}
+              size="sm"
+            />
           </div>
         )}
       </div>

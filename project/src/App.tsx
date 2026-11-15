@@ -9,8 +9,10 @@ import { Dashboard } from '@/views/Dashboard';
 import { FlashcardsView } from '@/views/FlashcardsView';
 import { QuizView } from '@/views/QuizView';
 import { DictionaryView } from '@/views/DictionaryView';
+import { useLanguage } from '@/languageContext';
 
 function App() {
+  const { t } = useLanguage();
   const { theme, toggleTheme } = useTheme();
   const {
     progress,
@@ -83,7 +85,7 @@ function App() {
         <button
           onClick={() => setChatOpen(true)}
           className="fixed bottom-6 right-6 z-40 w-14 h-14 gradient-bg text-white rounded-full shadow-xl shadow-primary-500/30 flex items-center justify-center hover:scale-110 transition-transform animate-glow"
-          aria-label="Open AI chat"
+          aria-label={t('Open AI chat')}
         >
           <MessageCircle className="w-6 h-6" />
           <span className="absolute -top-1 -right-1 w-5 h-5 bg-coral-500 rounded-full text-[10px] font-bold flex items-center justify-center animate-bounce-in">

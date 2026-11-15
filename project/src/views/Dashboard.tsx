@@ -17,6 +17,8 @@ import { quizQuestions } from '@/data/quizData';
 import { getLevelFromXp, getLevelProgress, getNextLevel, levels } from '@/data/levels';
 import { CircularProgress } from '@/components/CircularProgress';
 import { ProgressBar } from '@/components/ProgressBar';
+import { formatQuestionCount } from '@/language';
+import { useLanguage } from '@/languageContext';
 
 interface DashboardProps {
   progress: UserProgress;
@@ -24,6 +26,7 @@ interface DashboardProps {
 }
 
 export function Dashboard({ progress, setView }: DashboardProps) {
+  const { language, t } = useLanguage();
   const level = getLevelFromXp(progress.xp);
   const nextLevel = getNextLevel(progress.xp);
   const levelProgress = getLevelProgress(progress.xp);
@@ -82,26 +85,26 @@ export function Dashboard({ progress, setView }: DashboardProps) {
         <div className="relative">
           <div className="flex items-center gap-2 mb-2">
             <Sparkles className="w-5 h-5" />
-            <span className="text-sm font-medium opacity-90">¡Bienvenido de nuevo!</span>
+            <span className="text-sm font-medium opacity-90">{t('¡Bienvenido de nuevo!')}</span>
           </div>
           <h2 className="font-display text-2xl sm:text-3xl font-bold mb-2">
-            Ready to learn Spanish today?
+              {t('Ready to learn Spanish today?')}
           </h2>
           <p className="text-white/80 text-sm sm:text-base max-w-md">
-            You're on a {progress.streak}-day streak. Keep the momentum going!
+              {t("You're on a {streak}-day streak. Keep the momentum going!").replace('{streak}', String(progress.streak))}
           </p>
           <div className="mt-4 flex flex-wrap gap-3">
             <button
               onClick={() => setView('flashcards')}
               className="px-5 py-2.5 bg-white text-primary-600 rounded-xl font-semibold text-sm hover:bg-white/90 transition-colors flex items-center gap-2"
             >
-              Start Learning <ArrowRight className="w-4 h-4" />
+              {t('Start Learning')} <ArrowRight className="w-4 h-4" />
             </button>
             <button
               onClick={() => setView('chat')}
               className="px-5 py-2.5 bg-white/20 backdrop-blur text-white rounded-xl font-semibold text-sm hover:bg-white/30 transition-colors flex items-center gap-2"
             >
-              <MessageCircle className="w-4 h-4" /> Chat with AI Tutor
+              <MessageCircle className="w-4 h-4" /> {t('Chat with AI Tutor')}
             </button>
           </div>
         </div>
@@ -122,7 +125,7 @@ export function Dashboard({ progress, setView }: DashboardProps) {
               <p className="text-2xl font-display font-bold text-gray-900 dark:text-white">
                 {stat.value}
               </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{stat.label}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{t(stat.label)}</p>
             </div>
           );
         })}
@@ -134,7 +137,7 @@ export function Dashboard({ progress, setView }: DashboardProps) {
         <div className="lg:col-span-2 bg-white dark:bg-dark-900 rounded-2xl p-6 border border-gray-200 dark:border-dark-700">
           <div className="flex items-center gap-2 mb-5">
             <Trophy className="w-5 h-5 text-warmyellow-500" />
-            <h3 className="font-display font-bold text-lg text-gray-900 dark:text-white">Your Level</h3>
+            <h3 className="font-display font-bold text-lg text-gray-900 dark:text-white">{t('Your Level')}</h3>
           </div>
           <div className="flex flex-col sm:flex-row items-center gap-6">
             <CircularProgress
@@ -145,13 +148,14 @@ export function Dashboard({ progress, setView }: DashboardProps) {
             >
               <div className="text-center">
                 <p className="text-3xl font-display font-bold text-gray-900 dark:text-white">{level.level}</p>
-                <p className="text-xs text-gray-400">Level</p>
+                <p className="text-xs text-gray-400">{t('Level')}</p>
               </div>
             </CircularProgress>
             <div className="flex-1 w-full">
               <div className="flex items-baseline justify-between mb-1">
-                <span className="font-display font-bold text-xl text-gray-900 dark:text-white">{level.name}</span>
-                <span className="text-sm text-gray-400">{level.nameUa}</span>
+                <span className="font-display font-bold text-xl text-gray-900 dark:text-white">
+                  {language === 'uk' ? level.nameUa : level.name}
+                </span>
               </div>
               <ProgressBar
                 value={progress.xp - level.minXp}
@@ -163,11 +167,13 @@ export function Dashboard({ progress, setView }: DashboardProps) {
               {nextLevel ? (
                 <p className="text-sm text-gray-500 dark:text-gray-400 mt-3">
                   <span className="font-semibold text-primary-500">{nextLevel.minXp - progress.xp} XP</span>
-                  {' '}until you reach <span className="font-semibold">{nextLevel.name}</span>
+                  {' '}{t('until you reach')} <span className="font-semibold">
+                    {language === 'uk' ? nextLevel.nameUa : nextLevel.name}
+                  </span>
                 </p>
               ) : (
                 <p className="text-sm text-warmyellow-500 mt-3 font-semibold">
-                  Maximum level reached! ¡Felicidades! 🏆
+                  {t('Maximum level reached! ¡Felicidades! 🏆')}
                 </p>
               )}
             </div>
@@ -194,7 +200,7 @@ export function Dashboard({ progress, setView }: DashboardProps) {
                         {l.level}
                       </div>
                       <span className={`text-[10px] hidden sm:block ${reached ? 'text-gray-700 dark:text-gray-300' : 'text-gray-400'}`}>
-                        {l.name}
+                        {language === 'uk' ? l.nameUa : l.name}
                       </span>
                     </div>
                     {i < levels.length - 1 && (
@@ -211,7 +217,7 @@ export function Dashboard({ progress, setView }: DashboardProps) {
         <div className="bg-white dark:bg-dark-900 rounded-2xl p-6 border border-gray-200 dark:border-dark-700">
           <div className="flex items-center gap-2 mb-5">
             <Target className="w-5 h-5 text-coral-500" />
-            <h3 className="font-display font-bold text-lg text-gray-900 dark:text-white">Accuracy</h3>
+            <h3 className="font-display font-bold text-lg text-gray-900 dark:text-white">{t('Accuracy')}</h3>
           </div>
           <div className="flex flex-col items-center">
             <CircularProgress
@@ -222,22 +228,22 @@ export function Dashboard({ progress, setView }: DashboardProps) {
             >
               <div className="text-center">
                 <p className="text-3xl font-display font-bold text-gray-900 dark:text-white">{accuracy}%</p>
-                <p className="text-xs text-gray-400">Correct</p>
+                <p className="text-xs text-gray-400">{t('Correct')}</p>
               </div>
             </CircularProgress>
             <div className="mt-4 w-full space-y-2">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
-                  <TrendingUp className="w-4 h-4 text-green-500" /> Correct
+                  <TrendingUp className="w-4 h-4 text-green-500" /> {t('Correct')}
                 </span>
                 <span className="font-semibold text-gray-900 dark:text-white">{progress.correctAnswers}</span>
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-500 dark:text-gray-400">Total answered</span>
+                <span className="text-gray-500 dark:text-gray-400">{t('Total answered')}</span>
                 <span className="font-semibold text-gray-900 dark:text-white">{progress.totalAnswers}</span>
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-500 dark:text-gray-400">Chat messages</span>
+                <span className="text-gray-500 dark:text-gray-400">{t('Chat messages')}</span>
                 <span className="font-semibold text-gray-900 dark:text-white">{progress.chatMessages}</span>
               </div>
             </div>
@@ -247,7 +253,7 @@ export function Dashboard({ progress, setView }: DashboardProps) {
 
       {/* Quick actions */}
       <div>
-        <h3 className="font-display font-bold text-lg text-gray-900 dark:text-white mb-4">Quick Actions</h3>
+        <h3 className="font-display font-bold text-lg text-gray-900 dark:text-white mb-4">{t('Quick Actions')}</h3>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {quickActions.map((action) => {
             const Icon = action.icon;
@@ -260,8 +266,8 @@ export function Dashboard({ progress, setView }: DashboardProps) {
                 <div className={`w-11 h-11 ${action.color} rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform`}>
                   <Icon className="w-5 h-5 text-white" />
                 </div>
-                <p className="font-semibold text-gray-900 dark:text-white">{action.label}</p>
-                <p className="text-xs text-gray-400 mt-0.5">{action.desc}</p>
+                <p className="font-semibold text-gray-900 dark:text-white">{t(action.label)}</p>
+                <p className="text-xs text-gray-400 mt-0.5">{t(action.desc)}</p>
               </button>
             );
           })}
@@ -270,7 +276,7 @@ export function Dashboard({ progress, setView }: DashboardProps) {
 
       {/* Categories overview */}
       <div>
-        <h3 className="font-display font-bold text-lg text-gray-900 dark:text-white mb-4">Categories</h3>
+        <h3 className="font-display font-bold text-lg text-gray-900 dark:text-white mb-4">{t('Categories')}</h3>
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {categories.map((cat) => {
             const total = flashcards.filter((c) => c.category === cat.id).length;
@@ -291,8 +297,9 @@ export function Dashboard({ progress, setView }: DashboardProps) {
                   </div>
                   <span className="text-xs font-medium text-gray-400">{studied}/{total}</span>
                 </div>
-                <p className="font-semibold text-gray-900 dark:text-white text-sm">{cat.label}</p>
-                <p className="text-xs text-gray-400 mt-0.5 mb-3">{cat.labelUa}</p>
+                <p className="font-semibold text-gray-900 dark:text-white text-sm">
+                  {language === 'uk' ? cat.labelUa : cat.label}
+                </p>
                 <ProgressBar value={percent} color="gradient-bg" height="h-1.5" />
               </button>
             );
@@ -305,17 +312,17 @@ export function Dashboard({ progress, setView }: DashboardProps) {
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <Brain className="w-5 h-5 text-primary-500" />
-            <h3 className="font-display font-bold text-lg text-gray-900 dark:text-white">Quiz Challenge</h3>
+            <h3 className="font-display font-bold text-lg text-gray-900 dark:text-white">{t('Quiz Challenge')}</h3>
           </div>
           <button
             onClick={() => setView('quiz')}
             className="text-sm font-semibold text-primary-500 hover:text-primary-600 flex items-center gap-1"
           >
-            Start <ArrowRight className="w-4 h-4" />
+            {t('Start')} <ArrowRight className="w-4 h-4" />
           </button>
         </div>
         <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-          Test your knowledge with {quizQuestions.length} questions across all categories.
+          {t('Test your knowledge with {count} questions across all categories.').replace('{count}', String(quizQuestions.length))}
         </p>
         <div className="flex flex-wrap gap-2">
           {categories.map((cat) => {
@@ -325,7 +332,7 @@ export function Dashboard({ progress, setView }: DashboardProps) {
                 key={cat.id}
                 className="px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-dark-800 text-xs font-medium text-gray-600 dark:text-gray-400"
               >
-                {cat.label}: {count} questions
+                {language === 'uk' ? cat.labelUa : cat.label}: {formatQuestionCount(count, language)}
               </span>
             );
           })}
