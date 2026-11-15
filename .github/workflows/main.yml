@@ -44,7 +44,7 @@ jobs:
 
         with:
 
-          path: "."
+          path: "./project"
 
       - name: Deploy
 
