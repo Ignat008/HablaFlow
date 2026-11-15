@@ -31,6 +31,8 @@ const ukrainian: Record<string, string> = {
   'Corrected:': 'Виправлено:',
   Pronounce: 'Вимовити',
   'Listen to pronunciation': 'Прослухати вимову',
+  'Stop speaking': 'Зупинити озвучення',
+  'Stop response': 'Зупинити відповідь',
   '¡Bienvenido de nuevo!': 'З поверненням!',
   'Ready to learn Spanish today?': 'Готові сьогодні вивчати іспанську?',
   "You're on a {streak}-day streak. Keep the momentum going!":

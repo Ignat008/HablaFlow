@@ -1,13 +1,12 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import {
   Send,
+  Square,
   X,
-  MessageCircle,
   Trash2,
   Sparkles,
   Bot,
   User,
-  Volume2,
 } from 'lucide-react';
 import type { ChatMessage } from '@/types';
 import { generateAIResponse } from '@/data/aiEngine';
@@ -41,6 +40,7 @@ export function ChatWidget({ isOpen, onClose, recordChatMessage }: ChatWidgetPro
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const responseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -56,6 +56,19 @@ export function ChatWidget({ isOpen, onClose, recordChatMessage }: ChatWidgetPro
     }
   }, [isOpen]);
 
+  useEffect(() => () => {
+    if (responseTimeoutRef.current) clearTimeout(responseTimeoutRef.current);
+  }, []);
+
+  const handleStop = useCallback(() => {
+    if (responseTimeoutRef.current) {
+      clearTimeout(responseTimeoutRef.current);
+      responseTimeoutRef.current = null;
+    }
+    setIsTyping(false);
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+  }, []);
+
   const handleSend = useCallback(() => {
     const text = input.trim();
     if (!text || isTyping) return;
@@ -67,7 +80,8 @@ export function ChatWidget({ isOpen, onClose, recordChatMessage }: ChatWidgetPro
 
     // Simulate AI thinking delay
     const delay = 600 + Math.random() * 800;
-    setTimeout(() => {
+    responseTimeoutRef.current = setTimeout(() => {
+      responseTimeoutRef.current = null;
       const response = generateAIResponse(text, messages, language);
       addMessage({
         role: 'assistant',
@@ -117,9 +131,22 @@ export function ChatWidget({ isOpen, onClose, recordChatMessage }: ChatWidgetPro
             </div>
           </div>
           <div className="flex items-center gap-1">
+            {isTyping && (
+              <button
+                onClick={handleStop}
+                className="w-9 h-9 rounded-lg hover:bg-white/20 flex items-center justify-center transition-colors"
+                aria-label={t('Stop response')}
+                title={t('Stop response')}
+              >
+                <Square className="w-4 h-4" fill="currentColor" />
+              </button>
+            )}
             {messages.length > 0 && (
               <button
-                onClick={clearChat}
+                onClick={() => {
+                  handleStop();
+                  clearChat();
+                }}
                 className="w-9 h-9 rounded-lg hover:bg-white/20 flex items-center justify-center transition-colors"
                 aria-label={t('Clear chat')}
                 title={t('Clear chat')}
