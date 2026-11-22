@@ -26,17 +26,24 @@ const defaultProgress: UserProgress = {
   lastUnlock: null,
 };
 
+function normalizeProgress(progress: Partial<UserProgress> | null | undefined): UserProgress {
+  return {
+    ...defaultProgress,
+    ...(progress ?? {}),
+    studiedCardIds: progress?.studiedCardIds ?? [],
+    completedQuizIds: progress?.completedQuizIds ?? [],
+    favoriteCardIds: progress?.favoriteCardIds ?? [],
+    availableCardIds: progress?.availableCardIds?.length
+      ? progress.availableCardIds
+      : getInitialAvailableIds(),
+    learnedCardIds: progress?.learnedCardIds ?? [],
+    newCardIds: progress?.newCardIds ?? getInitialAvailableIds(),
+  };
+}
+
 export function useProgress() {
   const [storedProgress, setProgress] = useLocalStorage<UserProgress>('hablaflow-progress', defaultProgress);
-  const progress: UserProgress = {
-    ...defaultProgress,
-    ...storedProgress,
-    availableCardIds: storedProgress.availableCardIds?.length
-      ? storedProgress.availableCardIds
-      : getInitialAvailableIds(),
-    learnedCardIds: storedProgress.learnedCardIds ?? [],
-    newCardIds: storedProgress.newCardIds ?? getInitialAvailableIds(),
-  };
+  const progress = normalizeProgress(storedProgress);
 
   const updateStreak = useCallback(() => {
     setProgress((prev) => {
@@ -61,16 +68,17 @@ export function useProgress() {
 
   const markCardStudied = useCallback((cardId: string) => {
     setProgress((prev) => {
-      const firstStudy = !prev.studiedCardIds.includes(cardId);
+      const base = normalizeProgress(prev);
+      const firstStudy = !base.studiedCardIds.includes(cardId);
       const updated = {
-        ...prev,
-        flashcardsStudied: prev.flashcardsStudied + (firstStudy ? 1 : 0),
-        studiedCardIds: firstStudy ? [...prev.studiedCardIds, cardId] : prev.studiedCardIds,
-        learnedCardIds: prev.learnedCardIds.includes(cardId)
-          ? prev.learnedCardIds
-          : [...prev.learnedCardIds, cardId],
-        newCardIds: prev.newCardIds.filter((id) => id !== cardId),
-        xp: prev.xp + (firstStudy ? XP_REWARDS.flashcard : 0),
+        ...base,
+        flashcardsStudied: base.flashcardsStudied + (firstStudy ? 1 : 0),
+        studiedCardIds: firstStudy ? [...base.studiedCardIds, cardId] : base.studiedCardIds,
+        learnedCardIds: base.learnedCardIds.includes(cardId)
+          ? base.learnedCardIds
+          : [...base.learnedCardIds, cardId],
+        newCardIds: base.newCardIds.filter((id) => id !== cardId),
+        xp: base.xp + (firstStudy ? XP_REWARDS.flashcard : 0),
       };
       return processVocabularyUnlock(updated);
     });
@@ -88,12 +96,13 @@ export function useProgress() {
 
   const markQuizCompleted = useCallback((quizId: string) => {
     setProgress((prev) => {
-      if (prev.completedQuizIds.includes(quizId)) return prev;
+      const base = normalizeProgress(prev);
+      if (base.completedQuizIds.includes(quizId)) return base;
       return {
-        ...prev,
-        quizzesCompleted: prev.quizzesCompleted + 1,
-        completedQuizIds: [...prev.completedQuizIds, quizId],
-        xp: prev.xp + XP_REWARDS.quizComplete,
+        ...base,
+        quizzesCompleted: base.quizzesCompleted + 1,
+        completedQuizIds: [...base.completedQuizIds, quizId],
+        xp: base.xp + XP_REWARDS.quizComplete,
       };
     });
     updateStreak();
@@ -110,13 +119,14 @@ export function useProgress() {
 
   const toggleFavorite = useCallback((cardId: string) => {
     setProgress((prev) => {
-      const isFav = prev.favoriteCardIds.includes(cardId);
+      const base = normalizeProgress(prev);
+      const isFav = base.favoriteCardIds.includes(cardId);
       return {
-        ...prev,
+        ...base,
         favoriteCardIds: isFav
-          ? prev.favoriteCardIds.filter((id) => id !== cardId)
-          : [...prev.favoriteCardIds, cardId],
-        newCardIds: prev.newCardIds.filter((id) => id !== cardId),
+          ? base.favoriteCardIds.filter((id) => id !== cardId)
+          : [...base.favoriteCardIds, cardId],
+        newCardIds: base.newCardIds.filter((id) => id !== cardId),
       };
     });
   }, [setProgress]);

@@ -17,11 +17,13 @@ export function getInitialAvailableIds(): string[] {
 }
 
 export function processVocabularyUnlock(progress: UserProgress): UserProgress {
-  const availableIds = progress.availableCardIds.length
+  const learnedCardIds = progress.learnedCardIds ?? [];
+  const newCardIds = progress.newCardIds ?? [];
+  const availableIds = progress.availableCardIds?.length
     ? progress.availableCardIds
     : getInitialAvailableIds();
   const availableSet = new Set(availableIds);
-  const learnedInPool = progress.learnedCardIds.filter((id) => availableSet.has(id)).length;
+  const learnedInPool = learnedCardIds.filter((id) => availableSet.has(id)).length;
   const threshold = Math.ceil(availableIds.length * UNLOCK_THRESHOLD);
 
   if (learnedInPool < threshold) {
@@ -44,12 +46,12 @@ export function processVocabularyUnlock(progress: UserProgress): UserProgress {
   const unlocked = nextCandidates.slice(0, UNLOCK_BATCH_SIZE).map((word) => word.id);
   if (unlocked.length === 0) return { ...progress, availableCardIds: availableIds };
 
-  const newIds = unlocked.filter((id) => !progress.newCardIds.includes(id));
+  const newIds = unlocked.filter((id) => !newCardIds.includes(id));
   return {
     ...progress,
     availableCardIds: [...availableIds, ...unlocked],
-    learnedCardIds: progress.learnedCardIds,
-    newCardIds: [...progress.newCardIds, ...newIds],
+    learnedCardIds,
+    newCardIds: [...newCardIds, ...newIds],
     vocabularyLevel: level,
     unlockedBatchCount: progress.unlockedBatchCount + 1,
     lastUnlock: { count: unlocked.length, level },
@@ -57,13 +59,13 @@ export function processVocabularyUnlock(progress: UserProgress): UserProgress {
 }
 
 export function getAvailableWords(progress: UserProgress): Flashcard[] {
-  const available = new Set(progress.availableCardIds.length ? progress.availableCardIds : getInitialAvailableIds());
+  const available = new Set(progress.availableCardIds?.length ? progress.availableCardIds : getInitialAvailableIds());
   return flashcards.filter((word) => available.has(word.id));
 }
 
 export function getRecommendedWords(progress: UserProgress, limit = 20): Flashcard[] {
   const available = getAvailableWords(progress);
-  const learned = new Set(progress.learnedCardIds);
+  const learned = new Set(progress.learnedCardIds ?? []);
   const newWords = available.filter((word) => !learned.has(word.id));
   const reviewedWords = available.filter((word) => learned.has(word.id));
 

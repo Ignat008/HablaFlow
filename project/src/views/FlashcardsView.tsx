@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import {
   Layers,
   ChevronLeft,
@@ -45,6 +45,14 @@ export function FlashcardsView({
 
   const currentCard = cards[currentIndex];
 
+  useEffect(() => {
+    if (cards.length === 0) {
+      setCurrentIndex(0);
+    } else if (currentIndex >= cards.length) {
+      setCurrentIndex(cards.length - 1);
+    }
+  }, [cards.length, currentIndex]);
+
   const handleCategoryChange = useCallback((cat: Category | 'all') => {
     setSelectedCategory(cat);
     setCurrentIndex(0);
@@ -52,6 +60,7 @@ export function FlashcardsView({
   }, []);
 
   const handleNext = useCallback(() => {
+    if (cards.length === 0) return;
     if (currentCard) {
       markCardStudied(currentCard.id);
     }
@@ -62,6 +71,7 @@ export function FlashcardsView({
   }, [cards.length, currentCard, markCardStudied]);
 
   const handlePrev = useCallback(() => {
+    if (cards.length === 0) return;
     setFlipped(false);
     setTimeout(() => {
       setCurrentIndex((prev) => (prev - 1 + cards.length) % cards.length);
