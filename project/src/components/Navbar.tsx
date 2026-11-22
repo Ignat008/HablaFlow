@@ -17,6 +17,8 @@ import { ProgressBar } from './ProgressBar';
 import type { Theme } from '@/hooks/useTheme';
 import { formatStreak } from '@/language';
 import { useLanguage } from '@/languageContext';
+import { getAvailableWords } from '@/data/wordManager';
+import { flashcards } from '@/data/vocabulary';
 
 interface NavbarProps {
   currentView: View;
@@ -48,6 +50,8 @@ export function Navbar({ currentView, setView, theme, toggleTheme, progress, onO
   const level = getLevelFromXp(progress.xp);
   const levelProgress = getLevelProgress(progress.xp);
   const LevelIcon = iconMap[level.icon] || Sparkles;
+  const openedWordCount = getAvailableWords(progress).length;
+  const vocabularyProgress = flashcards.length > 0 ? (openedWordCount / flashcards.length) * 100 : 0;
 
   const handleNavClick = (view: View) => {
     setView(view);
@@ -88,6 +92,13 @@ export function Navbar({ currentView, setView, theme, toggleTheme, progress, onO
             <div className="flex justify-between mt-1.5">
               <span className="text-xs text-gray-400">{progress.xp} XP</span>
               <span className="text-xs text-gray-400">{Math.round(levelProgress)}%</span>
+            </div>
+            <div className="mt-3 pt-3 border-t border-primary-100 dark:border-dark-600">
+              <div className="flex justify-between mb-1">
+                <span className="text-xs text-gray-500 dark:text-gray-400">{t('Opened words')}</span>
+                <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">{openedWordCount}/{flashcards.length}</span>
+              </div>
+              <ProgressBar value={vocabularyProgress} color="bg-coral-500" height="h-1.5" />
             </div>
           </div>
 

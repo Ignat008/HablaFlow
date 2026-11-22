@@ -10,7 +10,8 @@ import {
   MessageCircle,
 } from 'lucide-react';
 import type { Category, UserProgress } from '@/types';
-import { categories, flashcards, getCardsByCategory } from '@/data/vocabulary';
+import { categories } from '@/data/vocabulary';
+import { useVocabularyProgress } from '@/hooks/useVocabularyProgress';
 import { SpeakButton } from '@/components/SpeakButton';
 import { ProgressBar } from '@/components/ProgressBar';
 import { vocabularyUk } from '@/data/vocabularyUk';
@@ -36,7 +37,11 @@ export function FlashcardsView({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [flipped, setFlipped] = useState(false);
 
-  const cards = useMemo(() => getCardsByCategory(selectedCategory), [selectedCategory]);
+  const { availableWords, isNew } = useVocabularyProgress(progress);
+  const cards = useMemo(
+    () => availableWords.filter((card) => selectedCategory === 'all' || card.category === selectedCategory),
+    [availableWords, selectedCategory]
+  );
 
   const currentCard = cards[currentIndex];
 
@@ -105,10 +110,10 @@ export function FlashcardsView({
               : 'bg-white dark:bg-dark-900 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-dark-700 hover:border-primary-300'
           }`}
         >
-          {t('All')} ({flashcards.length})
+          {t('All')} ({availableWords.length})
         </button>
         {categories.map((cat) => {
-          const count = flashcards.filter((c) => c.category === cat.id).length;
+          const count = availableWords.filter((c) => c.category === cat.id).length;
           const active = selectedCategory === cat.id;
           return (
             <button
@@ -158,6 +163,9 @@ export function FlashcardsView({
                       ? categories.find((c) => c.id === currentCard.category)?.labelUa
                       : categories.find((c) => c.id === currentCard.category)?.label}
                   </span>
+                  {isNew(currentCard.id) && (
+                    <span className="ml-2 text-[10px] font-bold bg-coral-500 text-white px-2 py-1 rounded-full">NEW</span>
+                  )}
                 </div>
                 <div className="absolute top-4 right-4">
                   <button

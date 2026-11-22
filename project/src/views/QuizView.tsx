@@ -10,7 +10,7 @@ import {
   Target,
   Award,
 } from 'lucide-react';
-import type { Category, UserProgress } from '@/types';
+import type { Category, UserProgress, QuizQuestion } from '@/types';
 import { categories } from '@/data/vocabulary';
 import { quizQuestions, getQuizByCategory } from '@/data/quizData';
 import { Confetti } from '@/components/Confetti';
@@ -19,17 +19,20 @@ import { SpeakButton } from '@/components/SpeakButton';
 import { quizUk } from '@/data/vocabularyUk';
 import { formatQuestionCount } from '@/language';
 import { useLanguage } from '@/languageContext';
+import { useVocabularyProgress } from '@/hooks/useVocabularyProgress';
 
 interface QuizViewProps {
   progress: UserProgress;
   recordQuizAnswer: (isCorrect: boolean) => void;
   markQuizCompleted: (quizId: string) => void;
+  markCardStudied: (cardId: string) => void;
 }
 
 type QuizState = 'setup' | 'playing' | 'finished';
 
-export function QuizView({ progress, recordQuizAnswer, markQuizCompleted }: QuizViewProps) {
+export function QuizView({ progress, recordQuizAnswer, markQuizCompleted, markCardStudied }: QuizViewProps) {
   const { language, t } = useLanguage();
+  const { recommendedWords } = useVocabularyProgress(progress);
   const [selectedCategory, setSelectedCategory] = useState<Category | 'all'>('all');
   const [state, setState] = useState<QuizState>('setup');
   const [questions, setQuestions] = useState(quizQuestions);
@@ -41,9 +44,28 @@ export function QuizView({ progress, recordQuizAnswer, markQuizCompleted }: Quiz
   const [showConfetti, setShowConfetti] = useState(false);
 
   const startQuiz = useCallback(() => {
-    const qs = getQuizByCategory(selectedCategory);
-    // Shuffle questions
-    const shuffled = [...qs].sort(() => Math.random() - 0.5);
+    const pool = recommendedWords.filter((word) =>
+      selectedCategory === 'all' || word.category === selectedCategory
+    );
+    const source = pool.length > 0 ? pool : recommendedWords;
+    const qs: QuizQuestion[] = source.slice(0, 20).map((word, index) => {
+      const distractors = source
+        .filter((candidate) => candidate.id !== word.id)
+        .slice(index % 3, (index % 3) + 3)
+        .map((candidate) => candidate.english);
+      const options = [...distractors, word.english].slice(0, 4);
+      while (options.length < 4) options.push(word.english);
+      const correctIndex = 3;
+      return {
+        id: `wq-${word.id}`,
+        question: `What does "${word.spanish}" mean?`,
+        options,
+        correctIndex,
+        explanation: `"${word.spanish}" means "${word.english}".`,
+        category: word.category,
+      };
+    });
+    const shuffled = qs.length > 0 ? [...qs].sort(() => Math.random() - 0.5) : getQuizByCategory(selectedCategory);
     setQuestions(shuffled);
     setCurrentIndex(0);
     setSelectedOption(null);
@@ -59,7 +81,13 @@ export function QuizView({ progress, recordQuizAnswer, markQuizCompleted }: Quiz
     setShowFeedback(true);
 
     const correct = optionIndex === questions[currentIndex].correctIndex;
-    if (correct) setScore((s) => s + 1);
+    if (correct) {
+      setScore((s) => s + 1);
+      const wordId = questions[currentIndex].id.startsWith('wq-')
+        ? questions[currentIndex].id.slice(3)
+        : '';
+      if (wordId) markCardStudied(wordId);
+    }
     recordQuizAnswer(correct);
 
     setAnsweredIds((prev) => {
@@ -69,7 +97,7 @@ export function QuizView({ progress, recordQuizAnswer, markQuizCompleted }: Quiz
       }
       return updated;
     });
-  }, [showFeedback, questions, currentIndex, recordQuizAnswer, markQuizCompleted]);
+  }, [showFeedback, questions, currentIndex, recordQuizAnswer, markQuizCompleted, markCardStudied]);
 
   const handleNext = useCallback(() => {
     if (currentIndex + 1 >= questions.length) {

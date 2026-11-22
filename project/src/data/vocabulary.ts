@@ -1,4 +1,5 @@
 import type { Flashcard, CategoryInfo } from '@/types';
+import { expandedVocabulary } from '@/data/expandedVocabulary';
 
 export const categories: CategoryInfo[] = [
   {
@@ -33,9 +34,13 @@ export const categories: CategoryInfo[] = [
     color: 'dark',
     description: 'Key grammar rules, verb conjugations, and structures',
   },
+  { id: 'work', label: 'Work', labelUa: 'Робота', icon: 'Briefcase', color: 'primary', description: 'Workplace and career vocabulary' },
+  { id: 'it', label: 'IT', labelUa: 'IT', icon: 'Monitor', color: 'dark', description: 'Technology and computing vocabulary' },
+  { id: 'emotions', label: 'Emotions', labelUa: 'Емоції', icon: 'Heart', color: 'coral', description: 'Feelings and emotional expressions' },
+  { id: 'daily', label: 'Daily Life', labelUa: 'Повсякденне життя', icon: 'Home', color: 'warmyellow', description: 'Everyday situations and routines' },
 ];
 
-export const flashcards: Flashcard[] = [
+export const legacyFlashcards: Flashcard[] = [
   // Basics
   {
     id: 'b1',
@@ -716,6 +721,19 @@ export const flashcards: Flashcard[] = [
     exampleTranslation: 'I would like a coffee, please.',
   },
 ];
+
+const expandedFlashcards: Flashcard[] = expandedVocabulary.map((word) => ({
+  id: word.id,
+  spanish: word.word,
+  english: word.translation,
+  category: word.category,
+  example: word.example,
+  exampleTranslation: word.exampleTranslation,
+  level: word.level,
+  transcription: word.transcription,
+}));
+
+export const flashcards: Flashcard[] = [...legacyFlashcards, ...expandedFlashcards];
 
 export function getCardsByCategory(category: string): Flashcard[] {
   if (category === 'all') return flashcards;

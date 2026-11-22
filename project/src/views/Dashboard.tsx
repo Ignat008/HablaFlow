@@ -19,6 +19,7 @@ import { CircularProgress } from '@/components/CircularProgress';
 import { ProgressBar } from '@/components/ProgressBar';
 import { formatQuestionCount } from '@/language';
 import { useLanguage } from '@/languageContext';
+import { useVocabularyProgress } from '@/hooks/useVocabularyProgress';
 
 interface DashboardProps {
   progress: UserProgress;
@@ -27,6 +28,7 @@ interface DashboardProps {
 
 export function Dashboard({ progress, setView }: DashboardProps) {
   const { language, t } = useLanguage();
+  const { availableWords } = useVocabularyProgress(progress);
   const level = getLevelFromXp(progress.xp);
   const nextLevel = getNextLevel(progress.xp);
   const levelProgress = getLevelProgress(progress.xp);
@@ -279,9 +281,9 @@ export function Dashboard({ progress, setView }: DashboardProps) {
         <h3 className="font-display font-bold text-lg text-gray-900 dark:text-white mb-4">{t('Categories')}</h3>
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {categories.map((cat) => {
-            const total = flashcards.filter((c) => c.category === cat.id).length;
+            const total = availableWords.filter((c) => c.category === cat.id).length;
             const studied = progress.studiedCardIds.filter((id) =>
-              flashcards.find((c) => c.id === id && c.category === cat.id)
+              availableWords.find((c) => c.id === id && c.category === cat.id)
             ).length;
             const percent = total > 0 ? Math.round((studied / total) * 100) : 0;
 

@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { useLocalStorage } from './useLocalStorage';
 import type { UserProgress } from '@/types';
 import { XP_REWARDS } from '@/data/levels';
+import { getInitialAvailableIds, processVocabularyUnlock } from '@/data/wordManager';
 
 const todayStr = () => new Date().toISOString().split('T')[0];
 
@@ -17,10 +18,25 @@ const defaultProgress: UserProgress = {
   studiedCardIds: [],
   completedQuizIds: [],
   favoriteCardIds: [],
+  availableCardIds: getInitialAvailableIds(),
+  learnedCardIds: [],
+  newCardIds: getInitialAvailableIds(),
+  vocabularyLevel: 1,
+  unlockedBatchCount: 0,
+  lastUnlock: null,
 };
 
 export function useProgress() {
-  const [progress, setProgress] = useLocalStorage<UserProgress>('hablaflow-progress', defaultProgress);
+  const [storedProgress, setProgress] = useLocalStorage<UserProgress>('hablaflow-progress', defaultProgress);
+  const progress: UserProgress = {
+    ...defaultProgress,
+    ...storedProgress,
+    availableCardIds: storedProgress.availableCardIds?.length
+      ? storedProgress.availableCardIds
+      : getInitialAvailableIds(),
+    learnedCardIds: storedProgress.learnedCardIds ?? [],
+    newCardIds: storedProgress.newCardIds ?? getInitialAvailableIds(),
+  };
 
   const updateStreak = useCallback(() => {
     setProgress((prev) => {
@@ -45,13 +61,18 @@ export function useProgress() {
 
   const markCardStudied = useCallback((cardId: string) => {
     setProgress((prev) => {
-      if (prev.studiedCardIds.includes(cardId)) return prev;
-      return {
+      const firstStudy = !prev.studiedCardIds.includes(cardId);
+      const updated = {
         ...prev,
-        flashcardsStudied: prev.flashcardsStudied + 1,
-        studiedCardIds: [...prev.studiedCardIds, cardId],
-        xp: prev.xp + XP_REWARDS.flashcard,
+        flashcardsStudied: prev.flashcardsStudied + (firstStudy ? 1 : 0),
+        studiedCardIds: firstStudy ? [...prev.studiedCardIds, cardId] : prev.studiedCardIds,
+        learnedCardIds: prev.learnedCardIds.includes(cardId)
+          ? prev.learnedCardIds
+          : [...prev.learnedCardIds, cardId],
+        newCardIds: prev.newCardIds.filter((id) => id !== cardId),
+        xp: prev.xp + (firstStudy ? XP_REWARDS.flashcard : 0),
       };
+      return processVocabularyUnlock(updated);
     });
     updateStreak();
   }, [setProgress, updateStreak]);
@@ -95,6 +116,7 @@ export function useProgress() {
         favoriteCardIds: isFav
           ? prev.favoriteCardIds.filter((id) => id !== cardId)
           : [...prev.favoriteCardIds, cardId],
+        newCardIds: prev.newCardIds.filter((id) => id !== cardId),
       };
     });
   }, [setProgress]);

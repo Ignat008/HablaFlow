@@ -9,7 +9,8 @@ import {
   MessageCircle,
 } from 'lucide-react';
 import type { Category, UserProgress } from '@/types';
-import { categories, flashcards } from '@/data/vocabulary';
+import { categories } from '@/data/vocabulary';
+import { useVocabularyProgress } from '@/hooks/useVocabularyProgress';
 import { SpeakButton } from '@/components/SpeakButton';
 import { ProgressBar } from '@/components/ProgressBar';
 import { vocabularyUk } from '@/data/vocabularyUk';
@@ -25,11 +26,12 @@ interface DictionaryViewProps {
 
 export function DictionaryView({ progress, toggleFavorite, isFavorite, setView }: DictionaryViewProps) {
   const { language, t } = useLanguage();
+  const { availableWords, isNew } = useVocabularyProgress(progress);
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<'favorites' | 'all' | Category>('all');
 
   const filteredCards = useMemo(() => {
-    let cards = flashcards;
+    let cards = availableWords;
 
     if (filter === 'favorites') {
       cards = cards.filter((c) => progress.favoriteCardIds.includes(c.id));
@@ -50,9 +52,9 @@ export function DictionaryView({ progress, toggleFavorite, isFavorite, setView }
     }
 
     return cards;
-  }, [filter, search, progress.favoriteCardIds]);
+  }, [filter, search, progress.favoriteCardIds, availableWords]);
 
-  const favoriteCards = flashcards.filter((c) => progress.favoriteCardIds.includes(c.id));
+  const favoriteCards = availableWords.filter((c) => progress.favoriteCardIds.includes(c.id));
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 space-y-6">
@@ -114,7 +116,7 @@ export function DictionaryView({ progress, toggleFavorite, isFavorite, setView }
               : 'bg-white dark:bg-dark-900 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-dark-700'
           }`}
         >
-          {t('All')} ({flashcards.length})
+          {t('All')} ({availableWords.length})
         </button>
         <button
           onClick={() => setFilter('favorites')}
@@ -127,7 +129,7 @@ export function DictionaryView({ progress, toggleFavorite, isFavorite, setView }
           <Heart className="w-3.5 h-3.5" /> {t('Favorites')} ({favoriteCards.length})
         </button>
         {categories.map((cat) => {
-          const count = flashcards.filter((c) => c.category === cat.id).length;
+          const count = availableWords.filter((c) => c.category === cat.id).length;
           const active = filter === cat.id;
           return (
             <button
@@ -190,6 +192,9 @@ export function DictionaryView({ progress, toggleFavorite, isFavorite, setView }
                       <h4 className="font-display font-bold text-base text-gray-900 dark:text-white">
                         {card.spanish}
                       </h4>
+                      {isNew(card.id) && (
+                        <span className="text-[10px] font-bold bg-coral-500 text-white px-2 py-0.5 rounded-full">NEW</span>
+                      )}
                       <SpeakButton text={card.spanish} size="sm" />
                     </div>
                     <p className="text-sm text-gray-500 dark:text-gray-400">

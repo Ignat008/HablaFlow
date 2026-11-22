@@ -27,10 +27,18 @@ function App() {
 
   const [view, setView] = useState<View>('dashboard');
   const [chatOpen, setChatOpen] = useState(false);
+  const [unlockToast, setUnlockToast] = useState<{ count: number; level: number } | null>(null);
 
   useEffect(() => {
     updateStreak();
   }, [updateStreak]);
+
+  useEffect(() => {
+    if (!progress.lastUnlock) return;
+    setUnlockToast(progress.lastUnlock);
+    const timeout = window.setTimeout(() => setUnlockToast(null), 5000);
+    return () => window.clearTimeout(timeout);
+  }, [progress.lastUnlock]);
 
   const handleSetView = (v: View) => {
     if (v === 'chat') {
@@ -68,6 +76,7 @@ function App() {
             progress={progress}
             recordQuizAnswer={recordQuizAnswer}
             markQuizCompleted={markQuizCompleted}
+            markCardStudied={markCardStudied}
           />
         )}
         {view === 'dictionary' && (
@@ -100,6 +109,25 @@ function App() {
         onClose={() => setChatOpen(false)}
         recordChatMessage={recordChatMessage}
       />
+
+      {unlockToast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] w-[calc(100%-2rem)] max-w-md rounded-2xl bg-white dark:bg-dark-900 border border-primary-200 dark:border-dark-600 shadow-xl p-4 flex items-center justify-between gap-4 animate-slide-up">
+          <div>
+            <p className="font-display font-bold text-sm text-gray-900 dark:text-white">
+              {t('Vocabulary unlocked!')}
+            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              {unlockToast.count} {t('new words at level')} {unlockToast.level}
+            </p>
+          </div>
+          <button
+            onClick={() => { setUnlockToast(null); handleSetView('flashcards'); }}
+            className="px-3 py-2 rounded-xl gradient-bg text-white text-xs font-semibold"
+          >
+            {t('Start Learning')}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

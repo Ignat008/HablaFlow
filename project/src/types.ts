@@ -1,4 +1,5 @@
-export type Category = 'basics' | 'travel' | 'food' | 'grammar';
+export type Category = 'basics' | 'travel' | 'food' | 'grammar' | 'work' | 'it' | 'emotions' | 'daily';
+export type VocabularyLevel = 1 | 2 | 3 | 4 | 5;
 
 export interface Flashcard {
   id: string;
@@ -7,6 +8,9 @@ export interface Flashcard {
   category: Category;
   example: string;
   exampleTranslation: string;
+  level?: VocabularyLevel;
+  transcription?: string;
+  isNew?: boolean;
 }
 
 export interface QuizQuestion {
@@ -38,6 +42,15 @@ export interface UserProgress {
   studiedCardIds: string[];
   completedQuizIds: string[];
   favoriteCardIds: string[];
+  availableCardIds: string[];
+  learnedCardIds: string[];
+  newCardIds: string[];
+  vocabularyLevel: VocabularyLevel;
+  unlockedBatchCount: number;
+  lastUnlock?: {
+    count: number;
+    level: VocabularyLevel;
+  } | null;
 }
 
 export interface CategoryInfo {
